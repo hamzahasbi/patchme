@@ -1,20 +1,34 @@
 use difference::{Changeset, Difference};
 use std::fs;
+use std::io::{self, Write};
 
 fn main() {
+    // Read file paths from user input
+    let original_file = read_input("Enter path to the original file: ");
+    let modified_file = read_input("Enter path to the modified file: ");
+
     // Read original and modified files
-    let original_content = fs::read_to_string("original.txt").expect("Failed to read original file");
-    let modified_content = fs::read_to_string("modified.txt").expect("Failed to read modified file");
+    let original_content = fs::read_to_string(&original_file).expect("Failed to read original file");
+    let modified_content = fs::read_to_string(&modified_file).expect("Failed to read modified file");
 
     // Calculate differences between original and modified content
     let changeset = Changeset::new(&original_content, &modified_content, "\n");
-    let diffs = changeset.diffs;
-    let patch = generate_patch("original.txt", "modified.txt", diffs);
+    let patch = generate_patch(&original_file, &modified_file, changeset.diffs);
 
     // Write patch to file
     fs::write("patch.diff", patch).expect("Failed to write patch file");
 
     println!("Patch generated successfully: patch.diff");
+}
+
+fn read_input(prompt: &str) -> String {
+    print!("{}", prompt);
+    io::stdout().flush().unwrap();
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+
+    input.trim().to_string()
 }
 
 fn generate_patch(original_file: &str, modified_file: &str, diffs: Vec<Difference>) -> String {
